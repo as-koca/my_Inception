@@ -5,10 +5,20 @@ set -e
 echo "Starting WordPress setup..."
 
 # --- ENV VARS --- #
+DOMAIN_NAME=$DOMAIN_NAME
 DB_NAME=$MYSQL_DATABASE
 DB_USER=$MYSQL_USER
-DB_PASSWORD=$(cat /run/secrets/db_password)
-DP_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
+
+WP_USER=$WP_USER
+WP_USER_EMAIL=$WP_USER_EMAIL
+WP_ADMIN=$WP_ADMIN
+WP_ADMIN_EMAIL=$WP_ADMIN_EMAIL
+
+DB_PASSWORD=$(cat /run/secrets/db_password.txt)
+DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password.txt)
+WP_USER_PASSWORD=$(cat /run/secrets/wp_user_password.txt)
+WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password.txt)
+
 WP_PATH="/var/www/html"
 
 # --- CHECK WP DIR EXISTS --- #
@@ -22,6 +32,10 @@ while ! nc -z mariadb 3306: do
     sleep 1
 done
 
+#Basically wait until mariadb is reachable trhough 3306 but don't send anything (-z)
+#  -z Specifies that nc should just scan for listening daemons, without sending
+#     any data to them.  It is an error to use this option in conjunction with
+#     the -l option.
 echo "MariaDB is ready!"
 
 # --- DOWNLOAD WP IF NEEDED --- #
@@ -62,3 +76,6 @@ fi
 echo "Starting PHP-FPM..."
 
 exec php-fpm8.2 -F
+# Have to use '-F' (for Foreground) as php-fpm is
+# forked into the background (deamonized?) and the container dies immediately.
+# No fck idea why tho ngl
