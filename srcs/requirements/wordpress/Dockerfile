@@ -15,7 +15,7 @@ ENTRYPOINT ["/usr/local/bin/init.sh"]
 
 # php-fpm: PHP-FPM executes the PHP code.
 # php-mysql: Allows PHP to talk to MariaDB.
-# php-curl: Many WordPress operations use cURL internally. Not always strictly required, but commonly installed.
+# php-curl: Many WordPress operations use curl internally. Not always strictly required, but commonly installed.
 # curl: Transfers a URL. We use it to download WP-CLI.
 
 # we then install wp-cli with curl (litterally took it from 'Make WordPress')
@@ -27,4 +27,4 @@ ENTRYPOINT ["/usr/local/bin/init.sh"]
 # apt update && apt install -y php-fpm
 # find /etc/php -name "php-fpm.conf"
 
-#installed binari by default is php-fpm8.2'
+#installed binary by default is php-fpm8.2'

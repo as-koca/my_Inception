@@ -5,13 +5,14 @@ set -e
 #will expose the env vars through the docker-compose file
 DB_NAME=$MYSQL_DATABASE
 DB_USER=$MYSQL_USER
-DB_PASSWORD=$(cat /run/secrets/db_password)
-DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
+DB_PASSWORD=$(cat /run/secrets/db_password.txt)
+DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password.txt)
 
 mkdir -p /run/mysqld
-chown mysql:mysql /run/mysqld
-chown -R mysql:mysql /var/lib/mysql
+# dir to put a bunch of files mdb only needs when running (sockets, ...)
 
+# Check if volume , mariadb exists
+# Docker mounts it here automatically when container runs.
 if [ ! -d "/var/lib/mysql/mysql" ]; then
 	echo "Initializing MariaDB..."
 	mariadb-install-db --user=mysql --datadir=/var/lib/mysql
@@ -28,6 +29,9 @@ EOF
 	echo "Database initialized."
 fi
 
+chown mysql:mysql /run/mysqld
+chown -R mysql:mysql /var/lib/mysql
+
 echo "Starting MariaDB..."
 exec mariadbd --user=mysql
 
@@ -41,3 +45,5 @@ exec mariadbd --user=mysql
 # We want the volume to be accesible even later so if we change the image
 # or if MariaDB crashes its gonna restart but
 # we still keep the collected data and don't lose it.
+#
+# test -d, test -f, test -e

@@ -20,30 +20,28 @@ WP_USER_PASSWORD=$(cat /run/secrets/wp_user_password.txt)
 WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password.txt)
 
 WP_PATH="/var/www/html"
-
-# --- CHECK WP DIR EXISTS --- #
-mkdir -p $WP_PATH
-chown -R www-data:www-data $WP_PATH
+#This is the default path that the more popular web servers use as the default.
+#Gonna be php and wp related files along the wp volume. (wp-config.php, themes, plugin, uploads, core files)
 
 # --- WAIT FOR MARIADB --- #
 echo "Waiting for MariaDB..."
-
 while ! nc -z mariadb 3306: do
     sleep 1
 done
-
-#Basically wait until mariadb is reachable trhough 3306 but don't send anything (-z)
-#  -z Specifies that nc should just scan for listening daemons, without sending
-#     any data to them.  It is an error to use this option in conjunction with
-#     the -l option.
 echo "MariaDB is ready!"
+#Basically waits until mariadb is reachable through 3306 but don't send anything (-z)
+#  -z Specifies that nc should just scan for listening daemons, without sending
+#     any data to them.
 
 # --- DOWNLOAD WP IF NEEDED --- #
 if [ ! -f "$WP_PATH/wp-config.php" ]; then
     echo "Downloading WordPress..."
 
+    # wp core installs, downloads, updates , manages wordpress installations
+    # download wordpress
     wp core download --path=$WP_PATH --allow-root
 
+    # wp config generates and reads the wp-config.php file.
     wp config create \
         --path=$WP_PATH \
         --dbname=$DB_NAME \
@@ -52,6 +50,7 @@ if [ ! -f "$WP_PATH/wp-config.php" ]; then
         --dbhost=mariadb \
         --allow-root
 
+    # set up wordpress
     wp core install \
         --path=$WP_PATH \
         --url="https://$DOMAIN_NAME" \
@@ -62,6 +61,7 @@ if [ ! -f "$WP_PATH/wp-config.php" ]; then
         --skip-email \
         --allow-root
 
+    # wp user manages users, along with their roles, capabilities, and meta.
     # Create second (non-admin) user
     wp user create $WP_USER $WP_USER_EMAIL \
         --role=author \
@@ -74,6 +74,9 @@ fi
 
 # --- START PHP-FPM --- #
 echo "Starting PHP-FPM..."
+
+# --- GIVE OWNERSHIP OF FILES TO WP --- #
+chown -R www-data:www-data $WP_PATH
 
 exec php-fpm8.2 -F
 # Have to use '-F' (for Foreground) as php-fpm is
