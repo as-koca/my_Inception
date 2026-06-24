@@ -5,8 +5,8 @@ set -e
 #will expose the env vars through the docker-compose file
 DB_NAME=$MYSQL_DATABASE
 DB_USER=$MYSQL_USER
-DB_PASSWORD=$(cat /run/secrets/db_password.txt)
-DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password.txt)
+DB_PASSWORD=$(cat /run/secrets/db_password)
+DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
 
 mkdir -p /run/mysqld
 # dir to put a bunch of files mdb only needs when running (sockets, ...)
@@ -17,7 +17,9 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 	echo "Initializing MariaDB..."
 	mariadb-install-db --user=mysql --datadir=/var/lib/mysql
 	mariadbd --user=mysql --bootstrap <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
+FLUSH PRIVILEGES;
+
+CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
 
 CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
 
@@ -34,6 +36,9 @@ chown -R mysql:mysql /var/lib/mysql
 
 echo "Starting MariaDB..."
 exec mariadbd --user=mysql
+
+# FLUSH PRIVILEGES is because in --bootstrap mode mysql doesnt allow some actions and aborts
+# the process (--skip-grant-tables), this fixes it.
 
 # PID = Process ID, every running process gets a number in linux.
 # ps -ef

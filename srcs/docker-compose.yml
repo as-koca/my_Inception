@@ -2,23 +2,46 @@ name: inception
 
 services:
   mariadb:
+    image: mariadb:1.0
+    restart: always
     build: ./requirements/mariadb
-    volumes: - /home/akoca/data/mariadb:/var/lib/mysql/mysql
-    env_file: - .env
-    networks: inception
+    volumes:
+      - /home/akoca/data/mariadb:/var/lib/mysql
+    env_file:
+      - .env
+    networks:
+      - inception
+    secrets:
+      - db_password
+      - db_root_password
   wordpress:
+    image: wordpress:1.0
+    restart: always
+    depends_on:
+      - mariadb
     build: ./requirements/wordpress
-    volumes: - /home/akoca/data/wordpress:/var/www/html
-    env_file: - .env
-    networks: inception
-   nginx:
+    volumes:
+      - /home/akoca/data/wordpress:/var/www/html
+    env_file:
+      - .env
+    networks:
+      - inception
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
+  nginx:
+    image: nginx:1.0
+    restart: always
+    depends_on:
+      - wordpress
     build: ./requirements/nginx
-    networks: inception
-   secrets:
-     - db_password
-     - db_root_password
-     - wp_admin_password
-     - wp_user_password
+    ports:
+      - "443:443"
+    volumes:
+      - /home/akoca/data/wordpress:/var/www/html
+    networks:
+      - inception
 
 secrets:
   db_password:

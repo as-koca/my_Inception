@@ -1,7 +1,7 @@
 FROM debian:bookworm
 
 RUN apt update && apt install -y curl \
-    php-fpm php-mysql php-curl
+    php-fpm php-mysql php-curl netcat-openbsd
 
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar \
@@ -17,6 +17,7 @@ ENTRYPOINT ["/usr/local/bin/init.sh"]
 # php-mysql: Allows PHP to talk to MariaDB.
 # php-curl: Many WordPress operations use curl internally. Not always strictly required, but commonly installed.
 # curl: Transfers a URL. We use it to download WP-CLI.
+# netcat-openbsd: the 'nc' command used in init isn't installed by default on bookworm
 
 # we then install wp-cli with curl (litterally took it from 'Make WordPress')
 # make it executable otherwise using "wp" would crash.
